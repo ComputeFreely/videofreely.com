@@ -40,8 +40,10 @@ curl -fsSL https://data.videofreely.com/ffmpeg/0.12.10/core-mt/ffmpeg-core.worke
 ```
 
 ```text
-976f4174ae7da80c0d4f9523ee6dde3ecbce7dc2ee392b2a5322049abb9b8627  assets/vendor/ffmpeg/814.ffmpeg.js
-ad4cfe957589995dea03fc8de1fd5e9f5cb4558a7282913172203082a65bbfaa  assets/vendor/ffmpeg/ffmpeg.js
+94c104969ee578f2332a4a40eab983b837ebd88aa03d0af1f9fec5b45f8b3dcc  assets/vendor/ffmpeg/814.ffmpeg.js
+535516558ba009816eac0b6935ff10b42d7d44ddc01bc85b1635bd412d4407b9  assets/vendor/ffmpeg/814.ffmpeg.js.map
+def4cfbafd4f51a4007ef6c0cfdb9061554343327f31c704c6548414b2316b06  assets/vendor/ffmpeg/ffmpeg.js
+535516558ba009816eac0b6935ff10b42d7d44ddc01bc85b1635bd412d4407b9  assets/vendor/ffmpeg/ffmpeg.js.map
 b266ab5b952555881dd6310663986994a182acb2b7ff25cf10a25f7a37ac2b21  https://data.videofreely.com/ffmpeg/0.12.10/core/ffmpeg-core.js
 9f57947a5bd530d8f00c5b3f2cb2a3492faa7e5d823315342d6a8656d0a6b7b7  https://data.videofreely.com/ffmpeg/0.12.10/core/ffmpeg-core.wasm
 62f5f5f468a37861da12c4581c321bb5ca8ba2f7b776377e08dd2ab72de293f9  https://data.videofreely.com/ffmpeg/0.12.10/core-mt/ffmpeg-core.js

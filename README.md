@@ -37,7 +37,6 @@ The plain server can still use the single-thread fallback.
 - Large files are limited by browser memory.
 - FFmpeg loads only when a conversion starts, so the first conversion may take longer.
 - The larger FFmpeg runtime files are loaded from `https://data.videofreely.com/ffmpeg/0.12.10/`.
-- Source map 404s for vendored FFmpeg files are harmless; the source maps are not required at runtime.
 
 ## Vendor Libraries
 
