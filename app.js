@@ -102,8 +102,6 @@
     } else if (!FFmpegConstructor) {
       setStatus("FFmpeg failed to load.", true);
       $("#engineBadge").textContent = "Missing";
-    } else if (canUseMultithread()) {
-      $("#engineBadge").textContent = "Fast ready";
     }
   });
 
@@ -626,7 +624,7 @@
     var baseUrl = ffmpegRuntimeBaseUrls[engine];
 
     setStatus(isMultithread ? "Loading FFmpeg multi-thread core..." : "Loading FFmpeg...");
-    $("#engineBadge").textContent = isMultithread ? "Fast loading" : "Loading";
+    $("#engineBadge").textContent = "Loading";
     ffmpeg = new FFmpegConstructor();
     ffmpegEngine = engine;
     ffmpeg.on("log", function (event) {
@@ -653,7 +651,7 @@
     }
 
     await ffmpeg.load(loadOptions);
-    $("#engineBadge").textContent = isMultithread ? "Fast core" : "Safe core";
+    $("#engineBadge").textContent = "Ready";
   }
 
   async function loadRuntimeBlobUrl(url, mimeType) {
@@ -794,9 +792,9 @@
       $("#engineBadge").textContent = "Needs attention";
     } else if (!isRunning) {
       if (ffmpeg && ffmpeg.loaded) {
-        $("#engineBadge").textContent = ffmpegEngine === "mt" ? "Fast core" : "Safe core";
+        $("#engineBadge").textContent = "Ready";
       } else {
-        $("#engineBadge").textContent = canUseMultithread() ? "Fast ready" : "Ready";
+        $("#engineBadge").textContent = "Ready";
       }
     }
   }
