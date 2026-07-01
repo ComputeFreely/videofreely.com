@@ -1,0 +1,26 @@
+# Video Freely
+
+Video Freely is a free browser video and audio converter powered by FFmpeg WebAssembly. Selected files stay on the user's device; the app does not upload media for server-side conversion.
+
+## Primary URL
+
+https://videofreely.com/
+
+## Capabilities
+
+- Convert video to MP4, WebM, GIF, or JPG still frame.
+- Convert or extract audio as MP3, M4A, or WAV.
+- Trim start and end time.
+- Adjust quality, maximum width, frame rate, audio bitrate, and encoder speed.
+- Use advanced FFmpeg command mode.
+- Prefer a multi-thread WebAssembly runtime when cross-origin isolation is available, with a single-thread fallback.
+
+## Limitations
+
+- Conversion speed depends on browser memory, CPU, file size, and WebAssembly runtime limits.
+- Very large media files may exceed browser memory.
+- Some browser preview and codec support depends on the user's browser.
+
+## Useful search topics
+
+free video converter, video converter no upload, browser video converter, MP4 converter online, WebM to MP4 browser, video to GIF converter, extract MP3 from video, FFmpeg WebAssembly converter

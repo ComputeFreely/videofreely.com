@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Free browser video converter with no upload step. Convert MP4, WebM, GIF, MP3, M4A, WAV, and JPG still frames locally with FFmpeg WebAssembly.">
+    <meta name="robots" content="index,follow,max-snippet:-1,max-image-preview:large">
+    <meta name="theme-color" content="#f5f4ee">
+    <meta name="application-name" content="Video Freely">
+    <meta property="og:title" content="Free Video Converter No Upload | Video Freely">
+    <meta property="og:description" content="Convert video and audio files locally in your browser with FFmpeg WebAssembly. No upload step, no account, and no download gate.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://videofreely.com/">
+    <meta property="og:site_name" content="Video Freely">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Free Video Converter No Upload | Video Freely">
+    <meta name="twitter:description" content="Browser-only MP4, WebM, GIF, MP3, M4A, WAV, and JPG conversion with FFmpeg WebAssembly.">
+    <title>Free Video Converter No Upload | Video Freely</title>
+    <link rel="canonical" href="https://videofreely.com/">
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml">
+    <link rel="alternate" type="text/plain" href="/llms.txt" title="AI-readable site summary">
+    <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/shared/freely-ui.css">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://computefreely.com/#organization",
+            "name": "Compute Freely",
+            "url": "https://computefreely.com/"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://videofreely.com/#app",
+            "name": "Video Freely",
+            "url": "https://videofreely.com/",
+            "description": "A free browser video and audio converter that uses FFmpeg WebAssembly locally with no upload step.",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Any modern browser",
+            "browserRequirements": "Requires JavaScript, WebAssembly, and a modern browser.",
+            "isAccessibleForFree": true,
+            "publisher": {
+              "@id": "https://computefreely.com/#organization"
+            },
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD",
+              "url": "https://videofreely.com/"
+            },
+            "featureList": [
+              "Convert video to MP4, WebM, GIF, and JPG still frames",
+              "Convert and extract audio as MP3, M4A, or WAV",
+              "Trim media, adjust quality, width, frame rate, and bitrate",
+              "Advanced FFmpeg command mode",
+              "Local browser processing with no upload step"
+            ]
+          },
+          {
+            "@type": "FAQPage",
+            "@id": "https://videofreely.com/#faq",
+            "mainEntity": [
+              {
+                "@type": "Question",
+                "name": "Does Video Freely upload videos?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "No. Video Freely runs FFmpeg WebAssembly in the browser and keeps selected media on the user's device."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "What can Video Freely convert?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Video Freely can export MP4, WebM, GIF, MP3, M4A, WAV, and JPG still frames from common video and audio inputs."
+                }
+              },
+              {
+                "@type": "Question",
+                "name": "Why can browser video conversion be slow?",
+                "acceptedAnswer": {
+                  "@type": "Answer",
+                  "text": "Conversion depends on browser memory, CPU speed, input size, and WebAssembly runtime limits because the work happens locally instead of on a server."
+                }
+              }
+            ]
+          },
+          {
+            "@type": "BreadcrumbList",
+            "@id": "https://videofreely.com/#breadcrumb",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Compute Freely",
+                "item": "https://computefreely.com/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Video Freely",
+                "item": "https://videofreely.com/"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+    <script src="assets/vendor/ffmpeg/ffmpeg.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Video Freely home">
+        <img class="brand-mark" src="assets/icons/favicon.svg" alt="" width="40" height="40" aria-hidden="true">
+        <span>
+          <strong>Video Freely</strong>
+          <small>Local video and audio conversion</small>
+        </span>
+      </a>
+      <div class="topbar-actions" aria-label="Site guarantees">
+        <span class="status-pill">Free</span>
+        <span class="status-pill">No uploads</span>
+        <span class="status-pill">Browser-only</span>
+      </div>
+    </header>
+
+    <main class="app-shell">
+      <section class="workspace-pane" aria-labelledby="workspaceTitle">
+        <div class="workspace-header">
+          <div>
+            <p class="eyebrow">Local Workspace</p>
+            <h1 id="workspaceTitle">Convert media in your browser</h1>
+          </div>
+          <div class="engine-badge" id="engineBadge" aria-live="polite">Ready</div>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+          <input id="fileInput" class="file-input" type="file" accept="video/*,audio/*,.mkv,.webm,.mov,.mp4,.m4v,.avi,.mp3,.wav,.m4a,.ogg,.flac">
+          <label class="drop-label" for="fileInput">
+            <span class="drop-icon upload-icon" aria-hidden="true"></span>
+            <span class="drop-title">Choose or drop a media file</span>
+            <span class="drop-note">MP4, MOV, WebM, MKV, MP3, WAV, and more</span>
+          </label>
+        </div>
+
+        <div class="preview-stage" id="previewStage" hidden>
+          <video id="videoPreview" controls playsinline hidden></video>
+          <audio id="audioPreview" controls hidden></audio>
+          <div id="previewFallback" class="preview-fallback" hidden>No browser preview for this file</div>
+        </div>
+
+        <div class="media-details" aria-label="Selected file details">
+          <div>
+            <span>File</span>
+            <strong id="fileName">None selected</strong>
+          </div>
+          <div>
+            <span>Size</span>
+            <strong id="fileSize">-</strong>
+          </div>
+          <div>
+            <span>Duration</span>
+            <strong id="fileDuration">-</strong>
+          </div>
+          <div>
+            <span>Video</span>
+            <strong id="fileVideo">-</strong>
+          </div>
+        </div>
+
+        <div class="progress-panel" aria-live="polite">
+          <div class="progress-heading">
+            <span id="statusText">Select a file to begin.</span>
+            <strong id="progressValue">0%</strong>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button class="button primary" type="button" id="convertButton" disabled>
+            <span class="button-icon convert-icon" aria-hidden="true"></span>
+            Convert
+          </button>
+          <button class="button danger" type="button" id="stopButton" disabled>
+            <span class="button-icon stop-icon" aria-hidden="true"></span>
+            Stop
+          </button>
+          <a class="button download disabled" id="downloadButton" href="#" download aria-disabled="true">
+            <span class="button-icon download-icon" aria-hidden="true"></span>
+            Download
+          </a>
+          <button class="button ghost" type="button" id="resetButton">
+            <span class="button-icon reset-icon" aria-hidden="true"></span>
+            Reset
+          </button>
+        </div>
+
+        <details class="log-panel">
+          <summary>FFmpeg log</summary>
+          <pre id="logOutput" aria-live="polite"></pre>
+        </details>
+      </section>
+
+      <form id="convertForm" class="control-pane">
+        <section class="panel" aria-labelledby="profileTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Output</p>
+              <h2 id="profileTitle">Format preset</h2>
+            </div>
+          </div>
+
+          <div class="profile-grid" role="tablist" aria-label="Output format">
+            <button type="button" class="profile-card active" data-profile="mp4" role="tab" aria-selected="true">
+              <span class="profile-icon film-icon" aria-hidden="true"></span>
+              <span>MP4</span>
+              <small>H.264 + AAC</small>
+            </button>
+            <button type="button" class="profile-card" data-profile="webm" role="tab" aria-selected="false">
+              <span class="profile-icon web-icon" aria-hidden="true"></span>
+              <span>WebM</span>
+              <small>VP9 + Opus</small>
+            </button>
+            <button type="button" class="profile-card" data-profile="gif" role="tab" aria-selected="false">
+              <span class="profile-icon gif-icon" aria-hidden="true"></span>
+              <span>GIF</span>
+              <small>Looping clip</small>
+            </button>
+            <button type="button" class="profile-card" data-profile="mp3" role="tab" aria-selected="false">
+              <span class="profile-icon audio-icon" aria-hidden="true"></span>
+              <span>MP3</span>
+              <small>Audio only</small>
+            </button>
+            <button type="button" class="profile-card" data-profile="m4a" role="tab" aria-selected="false">
+              <span class="profile-icon audio-icon" aria-hidden="true"></span>
+              <span>M4A</span>
+              <small>AAC audio</small>
+            </button>
+            <button type="button" class="profile-card" data-profile="wav" role="tab" aria-selected="false">
+              <span class="profile-icon wave-icon" aria-hidden="true"></span>
+              <span>WAV</span>
+              <small>Lossless PCM</small>
+            </button>
+            <button type="button" class="profile-card" data-profile="jpg" role="tab" aria-selected="false">
+              <span class="profile-icon frame-icon" aria-hidden="true"></span>
+              <span>JPG</span>
+              <small>Still frame</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel" id="videoPanel" aria-labelledby="videoTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Video</p>
+              <h2 id="videoTitle">Quality and size</h2>
+            </div>
+          </div>
+
+          <label class="range-field" id="qualityField" for="qualityRange">
+            <span>
+              <strong>Quality</strong>
+              <em id="qualityValue">CRF 24</em>
+            </span>
+            <input id="qualityRange" type="range" min="18" max="36" step="1" value="24">
+          </label>
+
+          <label class="range-field" id="widthField" for="maxWidthRange">
+            <span>
+              <strong>Max width</strong>
+              <em id="maxWidthValue">1280 px</em>
+            </span>
+            <input id="maxWidthRange" type="range" min="320" max="3840" step="2" value="1280">
+          </label>
+
+          <label class="check-field" id="originalSizeField">
+            <input type="checkbox" id="keepOriginalSize">
+            <span>Keep original size</span>
+          </label>
+
+          <label class="range-field" id="fpsField" for="fpsRange">
+            <span>
+              <strong>Frame rate</strong>
+              <em id="fpsValue">30 fps max</em>
+            </span>
+            <input id="fpsRange" type="range" min="6" max="60" step="1" value="30">
+          </label>
+
+          <label class="check-field" id="originalFpsField">
+            <input type="checkbox" id="keepOriginalFps">
+            <span>Keep original frame rate</span>
+          </label>
+
+          <label class="field" id="speedField">
+            <span>Encoder speed</span>
+            <select id="encoderSpeed">
+              <option value="ultrafast">Ultrafast</option>
+              <option value="superfast">Superfast</option>
+              <option value="veryfast" selected>Very fast</option>
+              <option value="faster">Faster</option>
+              <option value="fast">Fast</option>
+              <option value="medium">Medium</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="panel" aria-labelledby="clipTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Clip</p>
+              <h2 id="clipTitle">Trim and audio</h2>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>Start</span>
+              <input type="text" id="trimStart" inputmode="decimal" placeholder="0:00">
+            </label>
+            <label class="field">
+              <span>End</span>
+              <input type="text" id="trimEnd" inputmode="decimal" placeholder="Optional">
+            </label>
+          </div>
+
+          <label class="range-field" id="audioBitrateField" for="audioBitrateRange">
+            <span>
+              <strong>Audio bitrate</strong>
+              <em id="audioBitrateValue">160 kbps</em>
+            </span>
+            <input id="audioBitrateRange" type="range" min="64" max="320" step="16" value="160">
+          </label>
+
+          <label class="check-field" id="muteField">
+            <input type="checkbox" id="muteAudio">
+            <span>Remove audio</span>
+          </label>
+        </section>
+
+        <section class="panel" aria-labelledby="commandTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Command</p>
+              <h2 id="commandTitle">Run settings</h2>
+            </div>
+          </div>
+
+          <label class="field">
+            <span>Download name</span>
+            <input type="text" id="outputName" spellcheck="false" autocomplete="off" value="converted.mp4">
+          </label>
+
+          <label class="check-field">
+            <input type="checkbox" id="advancedMode">
+            <span>Advanced command mode</span>
+          </label>
+
+          <div class="advanced-block" id="advancedBlock" hidden>
+            <label class="field">
+              <span>FFmpeg command</span>
+              <textarea id="advancedCommand" spellcheck="false" rows="7"></textarea>
+            </label>
+            <div class="action-row compact">
+              <button class="button" type="button" id="resetCommandButton">
+                <span class="button-icon reset-icon" aria-hidden="true"></span>
+                Reset command
+              </button>
+            </div>
+          </div>
+        </section>
+      </form>
+    </main>
+
+    <section class="discovery-section" aria-labelledby="videoDiscoveryTitle">
+      <div class="discovery-content">
+        <p class="eyebrow">Video converter</p>
+        <h2 id="videoDiscoveryTitle">Convert media without uploading it.</h2>
+        <p class="discovery-lede">Video Freely is a free browser video converter and audio converter powered by FFmpeg WebAssembly. It can convert to MP4, WebM, GIF, MP3, M4A, WAV, and JPG still frames while keeping selected files on your device.</p>
+        <ul class="search-terms" aria-label="Common Video Freely searches">
+          <li>free video converter</li>
+          <li>video converter no upload</li>
+          <li>MP4 converter online</li>
+          <li>WebM to MP4 browser</li>
+          <li>video to GIF converter</li>
+          <li>extract MP3 from video</li>
+        </ul>
+        <div class="discovery-grid" aria-label="Video Freely capabilities">
+          <article>
+            <h3>Common formats</h3>
+            <p>Export MP4, WebM, animated GIF, MP3, M4A, WAV, or a JPG frame. Use presets for common jobs or advanced mode for a custom FFmpeg command.</p>
+          </article>
+          <article>
+            <h3>Local processing</h3>
+            <p>The selected media file stays in the browser. The app does not require an upload queue, cloud conversion job, account, or final download gate.</p>
+          </article>
+          <article>
+            <h3>Size and clip controls</h3>
+            <p>Trim start and end time, mute audio, change bitrate, limit width, reduce frame rate, and adjust output quality before downloading the converted file.</p>
+          </article>
+        </div>
+        <div class="faq-list" aria-label="Video Freely answers">
+          <article>
+            <h3>Does Video Freely upload videos?</h3>
+            <p>No. Video Freely runs FFmpeg WebAssembly in the browser and keeps selected media on your device.</p>
+          </article>
+          <article>
+            <h3>What can Video Freely convert?</h3>
+            <p>Video Freely can export MP4, WebM, GIF, MP3, M4A, WAV, and JPG still frames from common video and audio inputs.</p>
+          </article>
+          <article>
+            <h3>Why can browser video conversion be slow?</h3>
+            <p>Conversion depends on browser memory, CPU speed, input size, and WebAssembly runtime limits because the work happens locally instead of on a server.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer suite-footer">
+      <div class="suite-footer-head">
+        <strong>More free local-first browser tools</strong>
+        <span>Freely tools run in your browser when possible, with no accounts, uploads, watermarks, or download gates.</span>
+      </div>
+      <nav class="suite-footer-nav" aria-label="Freely tools">
+        <a class="suite-link" href="https://computefreely.com/"><strong>Compute Freely</strong><span>Free local browser tools</span></a>
+        <a class="suite-link" href="https://qrfreely.com/"><strong>QR Freely</strong><span>Free QR code generator</span></a>
+        <a class="suite-link" href="https://videofreely.com/"><strong>Video Freely</strong><span>Browser video converter</span></a>
+        <a class="suite-link" href="https://pdffreely.com/"><strong>PDF Freely</strong><span>PDF merge, split, and organize</span></a>
+        <a class="suite-link" href="https://fillfreely.com/"><strong>Fill Freely</strong><span>PDF form filler and signer</span></a>
+        <a class="suite-link" href="https://imagefreely.com/"><strong>Image Freely</strong><span>Image editor and bulk converter</span></a>
+      </nav>
+      <nav class="suite-footer-meta" aria-label="Project links">
+        <a href="https://github.com/ComputeFreely/videofreely.com">Source on GitHub</a>
+        <a href="https://github.com/ComputeFreely/videofreely.com/issues/new">Report an issue</a>
+        <a href="mailto:info@computefreely.com">info@computefreely.com</a>
+      </nav>
+    </footer>
+  </body>
+</html>
