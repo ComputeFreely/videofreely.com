@@ -515,6 +515,12 @@ h2 {
   font-weight: 900;
 }
 
+.field-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .range-field > span {
   display: flex;
   align-items: center;

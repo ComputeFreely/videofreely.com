@@ -1,6 +1,6 @@
 # FFmpeg Runtime
 
-This site vendors the small browser wrapper needed to start FFmpeg conversion. The larger core runtime files are served from Cloudflare R2 at `https://data.videofreely.com` so the Cloudflare Pages deploy does not include 30 MB wasm assets.
+This site vendors the small browser wrapper needed to start FFmpeg conversion. The larger core runtime files are served from Cloudflare R2 at `https://data.videofreely.com` so the Cloudflare Workers static assets deploy does not include 30 MB wasm assets.
 
 ## Packages
 

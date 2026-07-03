@@ -1,6 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Video Freely">
-  <rect width="64" height="64" rx="10" fill="#f3f7f8"/>
-  <rect x="10" y="15" width="44" height="34" rx="6" fill="#ffffff" stroke="#182023" stroke-width="3"/>
-  <path d="M26 24v16l14-8z" fill="#0f8f86"/>
-  <path d="M14 21h7M43 21h7M14 43h7M43 43h7" stroke="#c84c36" stroke-width="3" stroke-linecap="round"/>
+  <rect width="64" height="64" rx="14" fill="#101615"/>
+    <path d="M25 17 L47 32 L25 47 Z" fill="#f1b928" stroke="#f1b928" stroke-width="7" stroke-linejoin="round"/>
 </svg>

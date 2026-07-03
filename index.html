@@ -12,14 +12,20 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://videofreely.com/">
     <meta property="og:site_name" content="Video Freely">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://videofreely.com/assets/og-card.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Free Video Converter No Upload | Video Freely">
     <meta name="twitter:description" content="Browser-only MP4, WebM, GIF, MP3, M4A, WAV, and JPG conversion with FFmpeg WebAssembly.">
+    <meta name="twitter:image" content="https://videofreely.com/assets/og-card.png">
     <title>Free Video Converter No Upload | Video Freely</title>
     <link rel="canonical" href="https://videofreely.com/">
     <link rel="sitemap" type="application/xml" href="/sitemap.xml">
     <link rel="alternate" type="text/plain" href="/llms.txt" title="AI-readable site summary">
     <link rel="icon" href="assets/icons/favicon.svg" type="image/svg+xml">
+    <link rel="icon" href="assets/icons/favicon-32.png" type="image/png" sizes="32x32">
+    <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="assets/shared/freely-ui.css">
     <script type="application/ld+json">
@@ -164,12 +170,12 @@
           </div>
         </div>
 
-        <div class="progress-panel" aria-live="polite">
+        <div class="progress-panel">
           <div class="progress-heading">
-            <span id="statusText">Select a file to begin.</span>
+            <span id="statusText" aria-live="polite">Select a file to begin.</span>
             <strong id="progressValue">0%</strong>
           </div>
-          <div class="progress-track" aria-hidden="true">
+          <div class="progress-track" id="progressTrack" role="progressbar" aria-label="Conversion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
             <div class="progress-fill" id="progressFill"></div>
           </div>
         </div>
@@ -183,7 +189,7 @@
             <span class="button-icon stop-icon" aria-hidden="true"></span>
             Stop
           </button>
-          <a class="button download disabled" id="downloadButton" href="#" download aria-disabled="true">
+          <a class="button download disabled" id="downloadButton" aria-disabled="true">
             <span class="button-icon download-icon" aria-hidden="true"></span>
             Download
           </a>
@@ -195,7 +201,7 @@
 
         <details class="log-panel">
           <summary>FFmpeg log</summary>
-          <pre id="logOutput" aria-live="polite"></pre>
+          <pre id="logOutput"></pre>
         </details>
       </section>
 
@@ -207,38 +213,38 @@
             </div>
           </div>
 
-          <div class="profile-grid" role="tablist" aria-label="Output format">
-            <button type="button" class="profile-card active" data-profile="mp4" role="tab" aria-selected="true">
+          <div class="profile-grid" role="group" aria-label="Output format">
+            <button type="button" class="profile-card active" data-profile="mp4" aria-pressed="true">
               <span class="profile-icon film-icon" aria-hidden="true"></span>
               <span>MP4</span>
               <small>H.264 + AAC</small>
             </button>
-            <button type="button" class="profile-card" data-profile="webm" role="tab" aria-selected="false">
+            <button type="button" class="profile-card" data-profile="webm" aria-pressed="false">
               <span class="profile-icon web-icon" aria-hidden="true"></span>
               <span>WebM</span>
               <small>VP9 + Opus</small>
             </button>
-            <button type="button" class="profile-card" data-profile="gif" role="tab" aria-selected="false">
+            <button type="button" class="profile-card" data-profile="gif" aria-pressed="false">
               <span class="profile-icon gif-icon" aria-hidden="true"></span>
               <span>GIF</span>
               <small>Looping clip</small>
             </button>
-            <button type="button" class="profile-card" data-profile="mp3" role="tab" aria-selected="false">
+            <button type="button" class="profile-card" data-profile="mp3" aria-pressed="false">
               <span class="profile-icon audio-icon" aria-hidden="true"></span>
               <span>MP3</span>
               <small>Audio only</small>
             </button>
-            <button type="button" class="profile-card" data-profile="m4a" role="tab" aria-selected="false">
+            <button type="button" class="profile-card" data-profile="m4a" aria-pressed="false">
               <span class="profile-icon audio-icon" aria-hidden="true"></span>
               <span>M4A</span>
               <small>AAC audio</small>
             </button>
-            <button type="button" class="profile-card" data-profile="wav" role="tab" aria-selected="false">
+            <button type="button" class="profile-card" data-profile="wav" aria-pressed="false">
               <span class="profile-icon wave-icon" aria-hidden="true"></span>
               <span>WAV</span>
               <small>Lossless PCM</small>
             </button>
-            <button type="button" class="profile-card" data-profile="jpg" role="tab" aria-selected="false">
+            <button type="button" class="profile-card" data-profile="jpg" aria-pressed="false">
               <span class="profile-icon frame-icon" aria-hidden="true"></span>
               <span>JPG</span>
               <small>Still frame</small>
@@ -341,7 +347,8 @@
 
           <label class="field">
             <span>Download name</span>
-            <input type="text" id="outputName" spellcheck="false" autocomplete="off" value="converted.mp4">
+            <input type="text" id="outputName" spellcheck="false" autocomplete="off" value="converted.mp4" aria-describedby="outputNameNote">
+            <small class="field-note" id="outputNameNote" hidden>Ignored in advanced mode; the command's output path names the download.</small>
           </label>
 
           <label class="check-field">

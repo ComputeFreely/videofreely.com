@@ -8,12 +8,11 @@
   var commandDirty = false;
   var outputDirty = false;
   var isRunning = false;
+  var wasStopped = false;
   var ffmpeg = null;
-  var ffmpegEngine = "";
-  var ffmpegRuntimeBlobUrls = [];
   var ffmpegRuntimeBlobCache = {};
   var inputName = "input.mp4";
-  var lastOutputPath = "converted.mp4";
+  var progressScale = 1;
   var selectedFile = null;
   var mediaMeta = {
     duration: 0,
@@ -30,7 +29,6 @@
   var profiles = {
     mp4: {
       ext: "mp4",
-      mime: "video/mp4",
       kind: "video",
       quality: 24,
       width: 1280,
@@ -39,7 +37,6 @@
     },
     webm: {
       ext: "webm",
-      mime: "video/webm",
       kind: "video",
       quality: 32,
       width: 1280,
@@ -48,7 +45,6 @@
     },
     gif: {
       ext: "gif",
-      mime: "image/gif",
       kind: "gif",
       width: 640,
       fps: 12,
@@ -56,25 +52,21 @@
     },
     mp3: {
       ext: "mp3",
-      mime: "audio/mpeg",
       kind: "audio",
       audio: 192
     },
     m4a: {
       ext: "m4a",
-      mime: "audio/mp4",
       kind: "audio",
       audio: 160
     },
     wav: {
       ext: "wav",
-      mime: "audio/wav",
       kind: "audio",
       audio: 0
     },
     jpg: {
       ext: "jpg",
-      mime: "image/jpeg",
       kind: "image",
       width: 1280
     }
@@ -91,6 +83,7 @@
   document.addEventListener("DOMContentLoaded", function () {
     FFmpegConstructor = window.FFmpegWASM && window.FFmpegWASM.FFmpeg;
     bindEvents();
+    clearDownload();
     setProfile("mp4", true);
     syncRangeLabels();
     syncCommand();
@@ -104,8 +97,6 @@
       $("#engineBadge").textContent = "Missing";
     }
   });
-
-  window.addEventListener("beforeunload", revokeFFmpegRuntimeUrls);
 
   function bindEvents() {
     $$(".profile-card").forEach(function (button) {
@@ -141,6 +132,12 @@
         commandDirty = false;
         $("#advancedBlock").hidden = !event.target.checked;
       }
+      if (event.target.id === "outputName" && !$("#advancedMode").checked) {
+        var cleanedName = sanitizeFilename(event.target.value);
+        if (cleanedName) {
+          event.target.value = replaceExtension(cleanedName, profiles[currentProfile].ext);
+        }
+      }
       syncRangeLabels();
       syncCommand();
       updateControlVisibility();
@@ -173,6 +170,10 @@
     });
 
     dropZone.addEventListener("drop", function (event) {
+      if (isRunning) {
+        setStatus("Conversion in progress. Stop it before choosing a new file.");
+        return;
+      }
       var file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
       if (file) {
         $("#fileInput").files = event.dataTransfer.files;
@@ -192,7 +193,7 @@
     $$(".profile-card").forEach(function (button) {
       var isActive = button.dataset.profile === profileName;
       button.classList.toggle("active", isActive);
-      button.setAttribute("aria-selected", String(isActive));
+      button.setAttribute("aria-pressed", String(isActive));
     });
 
     if (applyDefaults) {
@@ -238,7 +239,11 @@
     $("#speedField").hidden = currentProfile !== "mp4";
     $("#audioBitrateField").hidden = isGif || isImage || currentProfile === "wav";
     $("#muteField").hidden = !isVideo;
-    $("#advancedBlock").hidden = !$("#advancedMode").checked;
+
+    var advanced = $("#advancedMode").checked;
+    $("#advancedBlock").hidden = !advanced;
+    $("#outputName").disabled = isRunning || advanced;
+    $("#outputNameNote").hidden = !advanced;
   }
 
   function setFile(file) {
@@ -381,7 +386,7 @@
       if (currentProfile === "mp4") {
         // x264 can deadlock under the pthread-backed wasm core when it auto-selects multiple encoder threads.
         args.push("-c:v", "libx264", "-threads", "1", "-preset", $("#encoderSpeed").value, "-crf", $("#qualityRange").value, "-pix_fmt", "yuv420p");
-        addVideoFilters(args);
+        addVideoFilters(args, true);
         if ($("#muteAudio").checked) {
           args.push("-an");
         } else {
@@ -390,7 +395,7 @@
         args.push("-movflags", "+faststart", outputPath);
       } else {
         args.push("-c:v", "libvpx-vp9", "-crf", $("#qualityRange").value, "-b:v", "0", "-row-mt", "1", "-cpu-used", "5");
-        addVideoFilters(args);
+        addVideoFilters(args, false);
         if ($("#muteAudio").checked) {
           args.push("-an");
         } else {
@@ -422,13 +427,16 @@
     };
   }
 
-  function addVideoFilters(args) {
+  function addVideoFilters(args, requireEvenSize) {
     var filters = [];
     if (!$("#keepOriginalFps").checked) {
       filters.push("fps=" + $("#fpsRange").value);
     }
     if (!$("#keepOriginalSize").checked) {
       filters.push(buildScaleFilter($("#maxWidthRange").value));
+    } else if (requireEvenSize) {
+      // libx264 with yuv420p rejects odd dimensions, so round original sizes down to even.
+      filters.push("scale=trunc(iw/2)*2:trunc(ih/2)*2");
     }
     if (filters.length) {
       args.push("-vf", filters.join(","));
@@ -451,7 +459,7 @@
 
   function buildScaleFilter(width) {
     var safeWidth = clampNumber(width, 320, 3840, 1280);
-    return "scale=w=min(" + safeWidth + "\\,iw):h=-2:flags=lanczos";
+    return "scale=w=min(" + safeWidth + "\\,iw):h=-2:force_divisible_by=2:flags=lanczos";
   }
 
   async function runConversion() {
@@ -476,7 +484,8 @@
     clearLog();
     setRunning(true);
     setProgress(0);
-    lastOutputPath = commandInfo.outputPath;
+    wasStopped = false;
+    progressScale = $("#advancedMode").checked ? 1 : computeProgressScale();
 
     try {
       await ensureFFmpeg();
@@ -509,16 +518,47 @@
       setDownload(data, commandInfo.outputPath);
       setProgress(100);
       setStatus("Done: " + formatBytes(data.byteLength) + " output.");
-      await deleteVirtualFile(inputName);
-      await deleteVirtualFile(commandInfo.outputPath);
     } catch (error) {
       var message = error && error.message ? error.message : String(error);
+      if (wasStopped || /terminate/i.test(message)) {
+        // Stop and Reset already set their own status; don't report a fake error.
+        if (!wasStopped) {
+          setStatus("Stopped.");
+          $("#engineBadge").textContent = "Stopped";
+        }
+        return;
+      }
       message = friendlyErrorMessage(message, commandInfo);
       setStatus(message.replace(/^Error:\s*/, ""), true);
       appendLog("Error: " + message);
     } finally {
+      await deleteVirtualFile(inputName);
+      await deleteVirtualFile(commandInfo.outputPath);
       setRunning(false);
     }
+  }
+
+  function computeProgressScale() {
+    var duration = mediaMeta.duration;
+    var start = 0;
+    var end = null;
+
+    if (!duration) {
+      return 1;
+    }
+
+    try {
+      start = parseTimecode($("#trimStart").value) || 0;
+      end = parseTimecode($("#trimEnd").value);
+    } catch (error) {
+      return 1;
+    }
+
+    var span = (end !== null ? Math.min(end, duration) : duration) - start;
+    if (!(span > 0) || span >= duration) {
+      return 1;
+    }
+    return duration / span;
   }
 
   function getCommandForRun() {
@@ -626,7 +666,6 @@
     setStatus(isMultithread ? "Loading FFmpeg multi-thread core..." : "Loading FFmpeg...");
     $("#engineBadge").textContent = "Loading";
     ffmpeg = new FFmpegConstructor();
-    ffmpegEngine = engine;
     ffmpeg.on("log", function (event) {
       if (event && event.message) {
         appendLog(event.message);
@@ -637,7 +676,7 @@
         return;
       }
       if (Number.isFinite(event.progress) && event.progress > 0) {
-        setProgress(Math.max(1, Math.min(99, event.progress * 100)));
+        setProgress(Math.max(1, Math.min(99, event.progress * 100 * progressScale)));
       }
     });
 
@@ -651,37 +690,67 @@
     }
 
     await ffmpeg.load(loadOptions);
+    setProgress(0);
     $("#engineBadge").textContent = "Ready";
   }
 
   async function loadRuntimeBlobUrl(url, mimeType) {
     var cacheKey = mimeType + " " + url;
-    var response;
-    var bytes;
-    var blobUrl;
 
     if (ffmpegRuntimeBlobCache[cacheKey]) {
       return ffmpegRuntimeBlobCache[cacheKey];
     }
 
-    response = await fetch(url, { mode: "cors" });
+    var response = await fetch(url, { mode: "cors" });
     if (!response.ok) {
       throw new Error("Unable to load FFmpeg runtime asset: " + response.status + " " + url);
     }
 
-    bytes = await response.arrayBuffer();
-    blobUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
+    var bytes = await readBodyWithProgress(response);
+    var blobUrl = URL.createObjectURL(new Blob([bytes], { type: mimeType }));
     ffmpegRuntimeBlobCache[cacheKey] = blobUrl;
-    ffmpegRuntimeBlobUrls.push(blobUrl);
     return blobUrl;
   }
 
-  function revokeFFmpegRuntimeUrls() {
-    ffmpegRuntimeBlobUrls.forEach(function (blobUrl) {
-      URL.revokeObjectURL(blobUrl);
+  async function readBodyWithProgress(response) {
+    var total = Number(response.headers.get("Content-Length")) || 0;
+
+    if (!response.body || typeof response.body.getReader !== "function") {
+      return new Uint8Array(await response.arrayBuffer());
+    }
+
+    var reader = response.body.getReader();
+    var chunks = [];
+    var received = 0;
+
+    while (true) {
+      var chunk = await reader.read();
+      if (chunk.done) {
+        break;
+      }
+      chunks.push(chunk.value);
+      received += chunk.value.byteLength;
+      reportEngineDownload(received, total);
+    }
+
+    var bytes = new Uint8Array(received);
+    var offset = 0;
+    chunks.forEach(function (part) {
+      bytes.set(part, offset);
+      offset += part.byteLength;
     });
-    ffmpegRuntimeBlobUrls = [];
-    ffmpegRuntimeBlobCache = {};
+    return bytes;
+  }
+
+  function reportEngineDownload(received, total) {
+    var receivedMb = (received / (1024 * 1024)).toFixed(1);
+    if (total > 0) {
+      var totalMb = (total / (1024 * 1024)).toFixed(1);
+      setStatus("Loading FFmpeg engine... " + receivedMb + " of " + totalMb + " MB");
+      setProgress(Math.min(99, (received / total) * 100));
+    } else {
+      setStatus("Loading FFmpeg engine... " + receivedMb + " MB");
+    }
   }
 
   function canUseMultithread() {
@@ -692,13 +761,13 @@
     if (!ffmpeg) {
       return;
     }
+    wasStopped = true;
     ffmpeg.terminate();
     ffmpeg = null;
-    ffmpegEngine = "";
     setRunning(false);
     setProgress(0);
-    $("#engineBadge").textContent = "Stopped";
     setStatus("Stopped.");
+    $("#engineBadge").textContent = "Stopped";
   }
 
   function resetAll() {
@@ -741,7 +810,9 @@
     $("#stopButton").disabled = !running;
     $("#fileInput").disabled = running;
     $$("#convertForm input, #convertForm select, #convertForm textarea, #convertForm button").forEach(function (element) {
-      if (element.id !== "resetCommandButton") {
+      if (element.id === "outputName") {
+        element.disabled = running || $("#advancedMode").checked;
+      } else if (element.id !== "resetCommandButton") {
         element.disabled = running;
       }
     });
@@ -756,9 +827,8 @@
   }
 
   function setDownload(data, outputPath) {
-    var profile = profiles[currentProfile];
     var bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
-    var blob = new Blob([bytes], { type: profile.mime || "application/octet-stream" });
+    var blob = new Blob([bytes], { type: mimeForOutput(outputPath) });
     var downloadButton = $("#downloadButton");
     downloadUrl = URL.createObjectURL(blob);
     downloadButton.href = downloadUrl;
@@ -791,11 +861,7 @@
     if (isError) {
       $("#engineBadge").textContent = "Needs attention";
     } else if (!isRunning) {
-      if (ffmpeg && ffmpeg.loaded) {
-        $("#engineBadge").textContent = "Ready";
-      } else {
-        $("#engineBadge").textContent = "Ready";
-      }
+      $("#engineBadge").textContent = "Ready";
     }
   }
 
@@ -803,6 +869,7 @@
     var percent = Math.max(0, Math.min(100, Math.round(value)));
     $("#progressFill").style.width = percent + "%";
     $("#progressValue").textContent = percent + "%";
+    $("#progressTrack").setAttribute("aria-valuenow", String(percent));
   }
 
   function appendLog(message) {
@@ -854,10 +921,8 @@
     if (!name) {
       name = buildDefaultOutputName(profile.ext);
     }
-    if (!extensionOf(name)) {
-      name += "." + profile.ext;
-    }
-    return name;
+    // The preset picks the muxer, so the extension must always match it.
+    return replaceExtension(name, profile.ext);
   }
 
   function buildDefaultOutputName(ext) {
@@ -892,6 +957,31 @@
       "audio/flac": "flac"
     };
     return map[type] || "";
+  }
+
+  function mimeForOutput(path) {
+    var map = {
+      aac: "audio/aac",
+      avi: "video/x-msvideo",
+      flac: "audio/flac",
+      gif: "image/gif",
+      jpeg: "image/jpeg",
+      jpg: "image/jpeg",
+      m4a: "audio/mp4",
+      m4v: "video/mp4",
+      mkv: "video/x-matroska",
+      mov: "video/quicktime",
+      mp3: "audio/mpeg",
+      mp4: "video/mp4",
+      oga: "audio/ogg",
+      ogg: "audio/ogg",
+      opus: "audio/ogg",
+      png: "image/png",
+      wav: "audio/wav",
+      webm: "video/webm",
+      webp: "image/webp"
+    };
+    return map[extensionOf(path)] || "application/octet-stream";
   }
 
   function replaceExtension(name, ext) {
